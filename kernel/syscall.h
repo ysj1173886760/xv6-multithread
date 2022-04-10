@@ -24,7 +24,7 @@
 #define SYS_mutex_alloc   23
 #define SYS_mutex_lock    24
 #define SYS_mutex_unlock  25
-#define SYS_cv_create     26
+#define SYS_cv_alloc      26
 #define SYS_cv_wait       27
 #define SYS_cv_signal     28
 #define SYS_mutex_free    29

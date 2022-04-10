@@ -108,7 +108,7 @@ extern uint64 sys_thread_create(void);
 extern uint64 sys_mutex_alloc(void);
 extern uint64 sys_mutex_lock(void);
 extern uint64 sys_mutex_unlock(void);
-extern uint64 sys_cv_create(void);
+extern uint64 sys_cv_alloc(void);
 extern uint64 sys_cv_wait(void);
 extern uint64 sys_cv_signal(void);
 extern uint64 sys_mutex_free(void);
@@ -140,7 +140,7 @@ static uint64 (*syscalls[])(void) = {
 [SYS_mutex_alloc]   sys_mutex_alloc,
 [SYS_mutex_lock]    sys_mutex_lock,
 [SYS_mutex_unlock]  sys_mutex_unlock,
-[SYS_cv_create]     sys_cv_create,
+[SYS_cv_alloc]     sys_cv_alloc,
 [SYS_cv_wait]       sys_cv_wait,
 [SYS_cv_signal]     sys_cv_signal,
 [SYS_mutex_free]    sys_mutex_free,

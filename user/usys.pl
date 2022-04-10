@@ -40,7 +40,7 @@ entry("thread_create");
 entry("mutex_alloc");
 entry("mutex_lock");
 entry("mutex_unlock");
-entry("cv_create");
+entry("cv_alloc");
 entry("cv_wait");
 entry("cv_signal");
 entry("mutex_free");
