@@ -317,6 +317,9 @@ fork(void)
   }
   np->sz = p->sz;
 
+  // copy stack
+  memmove((void *)np->ustack, (void *)p->ustack, PGSIZE);
+
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
 
