@@ -171,8 +171,20 @@ freeproc(struct proc *p)
   if(p->trapframe)
     kfree((void*)p->trapframe);
   p->trapframe = 0;
-  if(p->pagetable)
-    proc_freepagetable(p->pagetable, p->sz);
+  if(p->pagetable) {
+    p->tbp->refcnt--;
+    if (p->tbp->refcnt == 0) {
+      proc_freepagetable(p->pagetable, p->sz);
+    } else {
+      // otherwise only free the thread local pages
+      // clean the shared pte
+      for (int i = 0; i < 255; i++) {
+        p->pagetable[i] = 0;
+      }
+      proc_freepagetable(p->pagetable, 0);
+    }
+
+  }
   p->pagetable = 0;
   p->sz = 0;
   p->pid = 0;
@@ -370,6 +382,9 @@ thread_create()
   np->sz = p->sz;
   np->tbp = p->tbp;
   np->tbp->refcnt++;
+
+  // copy stack
+  memmove((void *)np->ustack, (void *)p->ustack, PGSIZE);
 
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
