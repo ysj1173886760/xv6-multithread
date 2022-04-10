@@ -10,7 +10,7 @@ struct cpu cpus[NCPU];
 
 struct proc proc[NPROC];
 
-struct thread_block tb[NPROC];
+struct thread_block thread_table[NPROC];
 
 struct proc *initproc;
 
@@ -52,9 +52,11 @@ procinit(void)
   
   initlock(&pid_lock, "nextpid");
   initlock(&wait_lock, "wait_lock");
+  int cnt = 0;
   for(p = proc; p < &proc[NPROC]; p++) {
       initlock(&p->lock, "proc");
       p->kstack = KSTACK((int) (p - proc));
+      p->index = cnt++;
   }
 }
 
@@ -121,6 +123,18 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
+  p->ustack = 0;
+
+  // initialize thread block
+  p->tbp = &thread_table[p->index];
+  p->tbp->refcnt = 1;
+
+  // Allocate user stack
+  if ((p->ustack = (uint64)kalloc()) == 0) {
+    freeproc(p);
+    release(&p->lock);
+  }
+  memset((void *)p->ustack, 0, PGSIZE);
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -152,6 +166,8 @@ found:
 static void
 freeproc(struct proc *p)
 {
+  if (p->ustack)
+    kfree((void *)p->ustack);
   if(p->trapframe)
     kfree((void*)p->trapframe);
   p->trapframe = 0;
@@ -198,6 +214,15 @@ proc_pagetable(struct proc *p)
     return 0;
   }
 
+  // map the ustack
+  if (mappages(pagetable, USTACK, PGSIZE,
+               p->ustack, PTE_R | PTE_W | PTE_U | PTE_X) < 0) {
+    uvmunmap(pagetable, TRAMPOLINE, 1, 0);
+    uvmunmap(pagetable, TRAPFRAME, 1, 0);
+    uvmfree(pagetable, 0);
+    return 0;
+  }
+
   return pagetable;
 }
 
@@ -208,6 +233,7 @@ proc_freepagetable(pagetable_t pagetable, uint64 sz)
 {
   uvmunmap(pagetable, TRAMPOLINE, 1, 0);
   uvmunmap(pagetable, TRAPFRAME, 1, 0);
+  uvmunmap(pagetable, USTACK, 1, 0);
   uvmfree(pagetable, sz);
 }
 
@@ -298,6 +324,60 @@ fork(void)
   np->trapframe->a0 = 0;
 
   // increment reference counts on open file descriptors.
+  for(i = 0; i < NOFILE; i++)
+    if(p->ofile[i])
+      np->ofile[i] = filedup(p->ofile[i]);
+  np->cwd = idup(p->cwd);
+
+  safestrcpy(np->name, p->name, sizeof(p->name));
+
+  pid = np->pid;
+
+  release(&np->lock);
+
+  acquire(&wait_lock);
+  np->parent = p;
+  release(&wait_lock);
+
+  acquire(&np->lock);
+  np->state = RUNNABLE;
+  release(&np->lock);
+
+  return pid;
+}
+
+int
+thread_create()
+{
+  int i, pid;
+  struct proc *np;
+  struct proc *p = myproc();
+
+  // Allocate process.
+  if((np = allocproc()) == 0){
+    return -1;
+  }
+
+  // share the address space except upper-most one
+  // because we have thread-local stack and trapframe
+  // i.e. page 255 is thread local
+  for (int i = 0; i < 255; i++) {
+    np->pagetable[i] = p->pagetable[i];
+  }
+  np->sz = p->sz;
+  np->tbp = p->tbp;
+  np->tbp->refcnt++;
+
+  // copy saved user registers.
+  *(np->trapframe) = *(p->trapframe);
+
+  // Cause fork to return 0 in the child.
+  np->trapframe->a0 = 0;
+
+  // increment reference counts on open file descriptors.
+  // actually, this is not needed
+  // however, changing the semantic requires a lot of addtional work
+  // i'm too lazy...
   for(i = 0; i < NOFILE; i++)
     if(p->ofile[i])
       np->ofile[i] = filedup(p->ofile[i]);

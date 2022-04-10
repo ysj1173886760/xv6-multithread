@@ -82,6 +82,10 @@ struct trapframe {
 
 enum procstate { UNUSED, USED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
+struct thread_block {
+  int refcnt;
+};
+
 // Per-process state
 struct proc {
   struct spinlock lock;
@@ -92,6 +96,8 @@ struct proc {
   int killed;                  // If non-zero, have been killed
   int xstate;                  // Exit status to be returned to parent's wait
   int pid;                     // Process ID
+  struct thread_block *tbp;
+  uint64 ustack;
 
   // wait_lock must be held when using this:
   struct proc *parent;         // Parent process
@@ -105,8 +111,7 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
-};
 
-struct thread_block {
-  int refcnt;
+  // index in proc array
+  int index;
 };

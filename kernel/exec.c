@@ -66,14 +66,11 @@ exec(char *path, char **argv)
 
   // Allocate two pages at the next page boundary.
   // Use the second as the user stack.
+
   sz = PGROUNDUP(sz);
-  uint64 sz1;
-  if((sz1 = uvmalloc(pagetable, sz, sz + 2*PGSIZE)) == 0)
-    goto bad;
-  sz = sz1;
-  uvmclear(pagetable, sz-2*PGSIZE);
-  sp = sz;
-  stackbase = sp - PGSIZE;
+
+  stackbase = USTACK;
+  sp = stackbase + PGSIZE;
 
   // Push argument strings, prepare rest of stack in ustack.
   for(argc = 0; argv[argc]; argc++) {
