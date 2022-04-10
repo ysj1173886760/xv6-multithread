@@ -23,6 +23,13 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+int thread_create(void);
+int mutex_alloc(void);
+int mutex_lock(int);
+int mutex_unlock(int);
+int cv_create(void);
+int cv_wait(int, int);
+int cv_signal(int);
 
 // ulib.c
 int stat(const char*, struct stat*);
