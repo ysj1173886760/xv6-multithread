@@ -134,7 +134,8 @@ UPROGS=\
 	$U/_wc\
 	$U/_zombie\
 	$U/_forkk\
-	$U/_sort
+	$U/_sort\
+	$U/_mutex
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)

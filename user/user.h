@@ -27,9 +27,11 @@ int thread_create(void);
 int mutex_alloc(void);
 int mutex_lock(int);
 int mutex_unlock(int);
+int mutex_free(int);
 int cv_create(void);
 int cv_wait(int, int);
 int cv_signal(int);
+int cv_free(int);
 
 // ulib.c
 int stat(const char*, struct stat*);

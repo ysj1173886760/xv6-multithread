@@ -111,6 +111,8 @@ extern uint64 sys_mutex_unlock(void);
 extern uint64 sys_cv_create(void);
 extern uint64 sys_cv_wait(void);
 extern uint64 sys_cv_signal(void);
+extern uint64 sys_mutex_free(void);
+extern uint64 sys_cv_free(void);
 
 static uint64 (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -141,7 +143,8 @@ static uint64 (*syscalls[])(void) = {
 [SYS_cv_create]     sys_cv_create,
 [SYS_cv_wait]       sys_cv_wait,
 [SYS_cv_signal]     sys_cv_signal,
-
+[SYS_mutex_free]    sys_mutex_free,
+[SYS_cv_free]       sys_cv_free,
 };
 
 void

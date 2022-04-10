@@ -43,3 +43,5 @@ entry("mutex_unlock");
 entry("cv_create");
 entry("cv_wait");
 entry("cv_signal");
+entry("mutex_free");
+entry("cv_free");
