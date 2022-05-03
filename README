@@ -1,3 +1,7 @@
 Support multithreading for xv6
 
 You can check the detailed design choices [here](http://heavensheep.xyz/?p=213)
+
+Update:
+
+warning: since xv6 assume the userstack is at low-address, between heap and test segment, there are some code in original xv6 that checks the address ranges. But while supporting multithreading, i've moved user stack to the high address, just below trapframe. So while accessing memory, especially string that lay in user stack, xv6 might reject us and throw an error. An example is fetchaddr that will check the correctness of our address, and the solution is simple, just remove those check, or fix the predicates.
